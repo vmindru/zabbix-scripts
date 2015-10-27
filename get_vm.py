@@ -22,13 +22,20 @@ def get_opt():
                         dest="SshKey",
                         help="PATH to key for SSH, if not specified default will be used", 
                         metavar="KEY")
+    parser.add_option(  "-l",
+                        "--local", 
+                        dest="Local",
+                        action="store_true",
+                        help="query local qemu:///system", 
+                        )
     (options, args) = parser.parse_args() 
-    if not options.VirtUser:
-        parser.error("you have to specify -u USER" )
-    if not options.VirtHost:
-        parser.error("you have to specify -H host" )
-    if not options.SshKey:
-        parser.error("you have to specify -k key" )
+    if not options.Local:
+        if not options.VirtUser:
+            parser.error("you have to specify -u USER" )
+        if not options.VirtHost:
+            parser.error("you have to specify -H host" )
+        if not options.SshKey:
+            parser.error("you have to specify -k key" )
     return options,args,parser
 
 def getcount(VirtUri):
@@ -38,8 +45,13 @@ def getcount(VirtUri):
 
 if __name__ == "__main__":
     (opts, args, parser) = get_opt()
-    VirtUser=opts.VirtUser
-    VirtHost=opts.VirtHost
-    SshKey=opts.SshKey
-    VirtUri = "qemu+ssh://"+VirtUser+"@"+VirtHost+"/system"+"?keyfile="+SshKey
-    print getcount(VirtUri)
+    if not opts.Local:
+        VirtUser=opts.VirtUser
+        VirtHost=opts.VirtHost
+        SshKey=opts.SshKey
+        VirtUri = "qemu+ssh://"+VirtUser+"@"+VirtHost+"/system"+"?keyfile="+SshKey
+        print getcount(VirtUri)
+    else:
+        VirtUri = "qemu:///system"
+        print getcount(VirtUri)
+
