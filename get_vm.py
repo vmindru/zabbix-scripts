@@ -4,13 +4,9 @@ import libvirt
 import sys
 from optparse import OptionParser
 
-#VirtUser = 'vmindru'
-#VirtHost = '127.0.0.1' 
-#KeyFile="/home/vmindru/.ssh/localhost"
-VirtUri = "qemu+ssh://"+VirtUser+"@"+VirtHost+"/system"+"?keyfile="+KeyFile
 
 def get_opt():
-    parser = OptionParser()
+    parser = OptionParser("usage: %prog -u USER -H HOST -K path_key_file")
     parser.add_option(  "-u",
                         "--user", 
                         dest="VirtUser",
@@ -27,7 +23,13 @@ def get_opt():
                         help="PATH to key for SSH, if not specified default will be used", 
                         metavar="KEY")
     (options, args) = parser.parse_args() 
-    return options,args
+    if not options.VirtUser:
+        parser.error("you have to specify -u USER" )
+    if not options.VirtHost:
+        parser.error("you have to specify -H host" )
+    if not options.SshKey:
+        parser.error("you have to specify -k key" )
+    return options,args,parser
 
 def getcount(VirtUri):
     conn = libvirt.open(VirtUri)
@@ -35,6 +37,9 @@ def getcount(VirtUri):
     return Count
 
 if __name__ == "__main__":
-    (opts, args) = get_opt()
-
-print getcount(VirtUri)
+    (opts, args, parser) = get_opt()
+    VirtUser=opts.VirtUser
+    VirtHost=opts.VirtHost
+    SshKey=opts.SshKey
+    VirtUri = "qemu+ssh://"+VirtUser+"@"+VirtHost+"/system"+"?keyfile="+SshKey
+    print getcount(VirtUri)
