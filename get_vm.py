@@ -28,6 +28,25 @@ def get_opt():
                         action="store_true",
                         help="query local qemu:///system", 
                         )
+    parser.add_option(  "-m",
+                        "--booked-mem",
+                        dest="BookedMem",
+                        action="store_true",
+                        help="query for total memmory booked",
+                    )
+    parser.add_option(  "-C",
+                        "--cpu-count",
+                        dest="CpuCount",
+                        action="store_true",
+                        help="query for number of virtual cores allocated",
+                    )
+    parser.add_option(  "-c",
+                        "--count-vm",
+                        dest="VmCount",
+                        action="store_true",
+                        help="query for total running VM",
+                    )
+
     (options, args) = parser.parse_args() 
     if not options.Local:
         if not options.VirtUser:
@@ -38,20 +57,76 @@ def get_opt():
             parser.error("you have to specify -k key" )
     return options,args,parser
 
-def getcount(VirtUri):
+def VmCount(VirtUri):
     conn = libvirt.open(VirtUri)
     Count = conn.numOfDomains() 
     return Count
 
+def CpuCount(VirtUri):
+    Core = 0 
+    conn = libvirt.open(VirtUri)
+    for dom in conn.listAllDomains():
+        if dom.info()[0] == 1:
+            Core = Core + dom.info()[3]
+    return Core
+
+def BookedMem(VirtUri):
+    Mem = 0 
+    conn = libvirt.open(VirtUri)
+    for dom in conn.listAllDomains():
+        if dom.info()[0] == 1:
+            Mem = Mem + dom.info()[1]
+    return Mem 
+
+
 if __name__ == "__main__":
     (opts, args, parser) = get_opt()
+    
+    
+
     if not opts.Local:
         VirtUser=opts.VirtUser
         VirtHost=opts.VirtHost
         SshKey=opts.SshKey
         VirtUri = "qemu+ssh://"+VirtUser+"@"+VirtHost+"/system"+"?keyfile="+SshKey
-        print getcount(VirtUri)
     else:
         VirtUri = "qemu:///system"
-        print getcount(VirtUri)
+
+    if  opts.VmCount:
+        print VmCount(VirtUri)
+    elif opts.CpuCount:
+        print CpuCount(VirtUri)
+    elif opts.BookedMem:
+        print BookedMem(VirtUri)
+    else:
+        print VmCount(VirtUri)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
